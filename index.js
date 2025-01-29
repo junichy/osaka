@@ -21,9 +21,12 @@ const positions = new Float32Array(numParticles * 3);
 const targetPositions = new Float32Array(numParticles * 3);
 const originalPositions = new Float32Array(numParticles * 3);
 
+// カラフルな色を設定するためのカラー属性を追加
+const colors = new Float32Array(numParticles * 3);
+
 for (let i = 0; i < numParticles; i++) {
 	const x = (Math.random() - 0.5) * 20;
-	const y = (Math.random() - 0.5) * 10;
+	const y = (Math.random() - 0.5) * 2;
 	const z = (Math.random() - 0.5) * 5;
 
 	positions[i * 3] = x;
@@ -52,7 +55,7 @@ const points = new THREE.Points(geometry, material);
 scene.add(points);
 
 // カメラの位置を調整
-camera.position.z = 5;
+camera.position.set(0, 0, 5); // 正面からの視点に設定
 
 // アニメーション用のフラグ
 let isHolding = false;
@@ -70,6 +73,8 @@ document.addEventListener('mousedown', () => {
 
 document.addEventListener('mouseup', () => {
 	isHolding = false;
+	// 回転をリセット
+	points.rotation.set(0, 0, 0);
 	gsap.to(geometry.attributes.position.array, {
 		duration: 2,
 		endArray: originalPositions,
@@ -91,10 +96,23 @@ function animate() {
 			positions[index + 1] =
 				originalPositions[index + 1] +
 				Math.sin(positions[index] * 0.5 + time) * 0.5;
+			positions[index] =
+				originalPositions[index] +
+				Math.sin(positions[index + 1] * 0.5 + time) * 0.5;
 		}
 		geometry.attributes.position.needsUpdate = true;
+	} else {
+		// 球体がY軸周りに回転する
+		points.rotation.y += 0.01; // Y軸周りに回転
 	}
 
 	renderer.render(scene, camera);
 }
 animate();
+
+// ウィンドウサイズ変更時の処理
+window.addEventListener('resize', () => {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+});
