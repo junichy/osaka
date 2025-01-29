@@ -15,8 +15,16 @@
 		</style>
 	</head>
 	<body>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.0/gsap.min.js"></script>
+		<!-- GSAPをCDNで読み込む -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+					"three/examples/": "https://unpkg.com/three@0.128.0/examples/"
+				}
+			}
+		</script>
 		<script type="module" src="index.js"></script>
 	</body>
 </html>

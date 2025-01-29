@@ -1,5 +1,8 @@
-// import { gsap } from 'gsap';
-
+import * as THREE from 'three';
+import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+// シーン、カメラ、レンダラーのセットアップ
 // シーン、カメラ、レンダラーのセットアップ
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -11,42 +14,37 @@ const camera = new THREE.PerspectiveCamera(
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-
 // パーティクルの数
-const numParticles = 10000;
-
+// パーティクルの数
+const numParticles = 15000;
+// ジオメトリ、マテリアルの作成
 // ジオメトリ、マテリアルの作成
 const geometry = new THREE.BufferGeometry();
 const positions = new Float32Array(numParticles * 3);
 const targetPositions = new Float32Array(numParticles * 3);
 const originalPositions = new Float32Array(numParticles * 3);
-
+// カラフルな色を設定するためのカラー属性を追加
 // カラフルな色を設定するためのカラー属性を追加
 const colors = new Float32Array(numParticles * 3);
-
 for (let i = 0; i < numParticles; i++) {
-	const x = (Math.random() - 0.5) * 20;
-	const y = (Math.random() - 0.5) * 2;
-	const z = (Math.random() - 0.5) * 5;
-
+	const x = (Math.random() - 0.5) * 50;
+	const y = (Math.random() - 0.5) * 0.4;
+	const z = (Math.random() - 0.5) * 40;
 	positions[i * 3] = x;
 	positions[i * 3 + 1] = y;
 	positions[i * 3 + 2] = z;
-
 	originalPositions[i * 3] = x;
 	originalPositions[i * 3 + 1] = y;
 	originalPositions[i * 3 + 2] = z;
-
+	// 球の座標を計算（球の形に整列）
 	// 球の座標を計算（球の形に整列）
 	const theta = Math.random() * Math.PI * 2;
 	const phi = Math.acos(Math.random() * 2 - 1);
 	const radius = 1.5;
-
 	targetPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
 	targetPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
 	targetPositions[i * 3 + 2] = radius * Math.cos(phi);
 }
-
 geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
 // ドットのサイズを小さく設定
@@ -83,6 +81,21 @@ document.addEventListener('mouseup', () => {
 	});
 });
 
+// EffectComposerのセットアップ
+const composer = new EffectComposer(renderer);
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
+
+// BokehPassの設定を調整
+const bokehPass = new BokehPass(scene, camera, {
+	focus: 3.5, // カメラから球体までの距離に近い値（5 - 1.5 = 3.5付近）
+	aperture: 0.005, // 絞りを小さくしてボケを抑える
+	maxblur: 0.01, // 最大ボケ量
+	width: window.innerWidth,
+	height: window.innerHeight,
+});
+composer.addPass(bokehPass);
+
 // アニメーションループ
 function animate() {
 	requestAnimationFrame(animate);
@@ -95,10 +108,10 @@ function animate() {
 			const index = i * 3;
 			positions[index + 1] =
 				originalPositions[index + 1] +
-				Math.sin(positions[index] * 0.5 + time) * 0.5;
+				Math.sin(positions[index] * 1.0 + time) * 0.5;
 			positions[index] =
 				originalPositions[index] +
-				Math.sin(positions[index + 1] * 0.5 + time) * 0.5;
+				Math.sin(positions[index + 1] * 1.0 + time) * 0.5;
 		}
 		geometry.attributes.position.needsUpdate = true;
 	} else {
@@ -106,7 +119,8 @@ function animate() {
 		points.rotation.y += 0.01; // Y軸周りに回転
 	}
 
-	renderer.render(scene, camera);
+	// composerを使用してレンダリング
+	composer.render();
 }
 animate();
 
@@ -115,4 +129,5 @@ window.addEventListener('resize', () => {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize(window.innerWidth, window.innerHeight);
+	composer.setSize(window.innerWidth, window.innerHeight);
 });
