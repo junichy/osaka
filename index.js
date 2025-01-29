@@ -15,43 +15,97 @@ const camera = new THREE.PerspectiveCamera(
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-// パーティクルの数
-// パーティクルの数
-const numParticles = 15000;
-// ジオメトリ、マテリアルの作成
-// ジオメトリ、マテリアルの作成
-const geometry = new THREE.BufferGeometry();
-const positions = new Float32Array(numParticles * 3);
-const targetPositions = new Float32Array(numParticles * 3);
-const originalPositions = new Float32Array(numParticles * 3);
-// カラフルな色を設定するためのカラー属性を追加
-// カラフルな色を設定するためのカラー属性を追加
-const colors = new Float32Array(numParticles * 3);
-for (let i = 0; i < numParticles; i++) {
-	const x = (Math.random() - 0.5) * 50;
-	const y = (Math.random() - 0.5) * 0.4;
-	const z = (Math.random() - 0.5) * 40;
-	positions[i * 3] = x;
-	positions[i * 3 + 1] = y;
-	positions[i * 3 + 2] = z;
-	originalPositions[i * 3] = x;
-	originalPositions[i * 3 + 1] = y;
-	originalPositions[i * 3 + 2] = z;
-	// 球の座標を計算（球の形に整列）
-	// 球の座標を計算（球の形に整列）
+// パーティクルの数を3つのグループに分ける
+const numParticlesPerGroup = 5000; // 合計15000個を3グループに
+
+// 第1の波用のジオメトリ
+const geometry1 = new THREE.BufferGeometry();
+const positions1 = new Float32Array(numParticlesPerGroup * 3);
+const originalPositions1 = new Float32Array(numParticlesPerGroup * 3);
+const targetPositions1 = new Float32Array(numParticlesPerGroup * 3);
+
+// 第2の波用のジオメトリ
+const geometry2 = new THREE.BufferGeometry();
+const positions2 = new Float32Array(numParticlesPerGroup * 3);
+const originalPositions2 = new Float32Array(numParticlesPerGroup * 3);
+const targetPositions2 = new Float32Array(numParticlesPerGroup * 3);
+
+// 第3の波用のジオメトリを追加
+const geometry3 = new THREE.BufferGeometry();
+const positions3 = new Float32Array(numParticlesPerGroup * 3);
+const originalPositions3 = new Float32Array(numParticlesPerGroup * 3);
+const targetPositions3 = new Float32Array(numParticlesPerGroup * 3);
+
+// 初期位置の設定に第3の波を追加
+for (let i = 0; i < numParticlesPerGroup; i++) {
+	// 第1の波の初期位置（水色の波 - 0x88ccff - 横方向の動き）
+	const x1 = (Math.random() - 0.5) * 50;
+	const y1 = (Math.random() - 0.5) * 0.5;
+	const z1 = (Math.random() - 0.5) * 30;
+	positions1[i * 3] = x1;
+	positions1[i * 3 + 1] = y1;
+	positions1[i * 3 + 2] = z1;
+	originalPositions1[i * 3] = x1;
+	originalPositions1[i * 3 + 1] = y1;
+	originalPositions1[i * 3 + 2] = z1;
+
+	// 第2の波の初期位置（ピンクの波 - 0xff88cc - 縦方向の動き）
+	const x2 = (Math.random() - 0.5) * 50;
+	const y2 = (Math.random() - 0.5) * 1.0; // 0.4から1.0に増加
+	const z2 = (Math.random() - 0.5) * 40;
+	positions2[i * 3] = x2;
+	positions2[i * 3 + 1] = y2;
+	positions2[i * 3 + 2] = z2;
+	originalPositions2[i * 3] = x2;
+	originalPositions2[i * 3 + 1] = y2;
+	originalPositions2[i * 3 + 2] = z2;
+
+	// 第3の波の初期位置（オレンジの波 - 0xff8844 - 斜め方向の動き）
+	const x3 = (Math.random() - 0.5) * 50;
+	const y3 = (Math.random() - 0.5) * 0.4;
+	const z3 = (Math.random() - 0.5) * 40;
+	positions3[i * 3] = x3;
+	positions3[i * 3 + 1] = y3;
+	positions3[i * 3 + 2] = z3;
+	originalPositions3[i * 3] = x3;
+	originalPositions3[i * 3 + 1] = y3;
+	originalPositions3[i * 3 + 2] = z3;
+
+	// 球形状の目標位置（両方のグループ用）
 	const theta = Math.random() * Math.PI * 2;
 	const phi = Math.acos(Math.random() * 2 - 1);
 	const radius = 1.5;
-	targetPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-	targetPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-	targetPositions[i * 3 + 2] = radius * Math.cos(phi);
-}
-geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-// ドットのサイズを小さく設定
-const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.02 });
-const points = new THREE.Points(geometry, material);
-scene.add(points);
+	targetPositions1[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+	targetPositions1[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+	targetPositions1[i * 3 + 2] = radius * Math.cos(phi);
+
+	targetPositions2[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+	targetPositions2[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+	targetPositions2[i * 3 + 2] = radius * Math.cos(phi);
+
+	// 球形状の目標位置（第3のグループ用も追加）
+	targetPositions3[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+	targetPositions3[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+	targetPositions3[i * 3 + 2] = radius * Math.cos(phi);
+}
+
+geometry1.setAttribute('position', new THREE.BufferAttribute(positions1, 3));
+geometry2.setAttribute('position', new THREE.BufferAttribute(positions2, 3));
+geometry3.setAttribute('position', new THREE.BufferAttribute(positions3, 3));
+
+// 2つの異なる色のマテリアル
+const material1 = new THREE.PointsMaterial({ color: 0x88ccff, size: 0.02 });
+const material2 = new THREE.PointsMaterial({ color: 0xff88cc, size: 0.02 });
+const material3 = new THREE.PointsMaterial({ color: 0xff8844, size: 0.02 });
+
+const points1 = new THREE.Points(geometry1, material1);
+const points2 = new THREE.Points(geometry2, material2);
+const points3 = new THREE.Points(geometry3, material3);
+
+scene.add(points1);
+scene.add(points2);
+scene.add(points3);
 
 // カメラの位置を調整
 camera.position.set(0, 0, 5); // 正面からの視点に設定
@@ -62,23 +116,49 @@ let isHolding = false;
 // クリック長押し処理
 document.addEventListener('mousedown', () => {
 	isHolding = true;
-	gsap.to(geometry.attributes.position.array, {
+	gsap.to(geometry1.attributes.position.array, {
 		duration: 2,
-		endArray: targetPositions,
+		endArray: targetPositions1,
 		ease: 'power2.out',
-		onUpdate: () => (geometry.attributes.position.needsUpdate = true),
+		onUpdate: () => (geometry1.attributes.position.needsUpdate = true),
+	});
+	gsap.to(geometry2.attributes.position.array, {
+		duration: 2,
+		endArray: targetPositions2,
+		ease: 'power2.out',
+		onUpdate: () => (geometry2.attributes.position.needsUpdate = true),
+	});
+	gsap.to(geometry3.attributes.position.array, {
+		duration: 2,
+		endArray: targetPositions3,
+		ease: 'power2.out',
+		onUpdate: () => (geometry3.attributes.position.needsUpdate = true),
 	});
 });
 
 document.addEventListener('mouseup', () => {
 	isHolding = false;
 	// 回転をリセット
-	points.rotation.set(0, 0, 0);
-	gsap.to(geometry.attributes.position.array, {
+	points1.rotation.set(0, 0, 0);
+	points2.rotation.set(0, 0, 0);
+	points3.rotation.set(0, 0, 0);
+	gsap.to(geometry1.attributes.position.array, {
 		duration: 2,
-		endArray: originalPositions,
+		endArray: originalPositions1,
 		ease: 'power2.out',
-		onUpdate: () => (geometry.attributes.position.needsUpdate = true),
+		onUpdate: () => (geometry1.attributes.position.needsUpdate = true),
+	});
+	gsap.to(geometry2.attributes.position.array, {
+		duration: 2,
+		endArray: originalPositions2,
+		ease: 'power2.out',
+		onUpdate: () => (geometry2.attributes.position.needsUpdate = true),
+	});
+	gsap.to(geometry3.attributes.position.array, {
+		duration: 2,
+		endArray: originalPositions3,
+		ease: 'power2.out',
+		onUpdate: () => (geometry3.attributes.position.needsUpdate = true),
 	});
 });
 
@@ -112,28 +192,52 @@ gui.add(bokehPass.uniforms.maxblur, 'value', 0, 0.01, 0.0001).name('Max Blur');
 function animate() {
 	requestAnimationFrame(animate);
 
-	// 球体までの距離を動的に計算
-	const spherePosition = new THREE.Vector3(0, 0, 0);
-	const distance = camera.position.distanceTo(spherePosition);
-	bokehPass.uniforms.focus.value = distance;
-
-	// 波の動き (isHolding じゃないときだけ)
 	if (!isHolding) {
-		const positions = geometry.attributes.position.array;
 		const time = performance.now() * 0.002;
-		for (let i = 0; i < numParticles; i++) {
+
+		// 第1の波の更新（横方向の波）
+		const positions1 = geometry1.attributes.position.array;
+		for (let i = 0; i < numParticlesPerGroup; i++) {
 			const index = i * 3;
-			positions[index + 1] =
-				originalPositions[index + 1] +
-				Math.sin(positions[index] * 1.0 + time) * 0.5;
-			positions[index] =
-				originalPositions[index] +
-				Math.sin(positions[index + 1] * 1.0 + time) * 0.5;
+			// X軸方向の動き
+			positions1[index] =
+				originalPositions1[index] +
+				Math.sin(time * 1.0 + positions1[index + 2] * 0.4) * 4.0;
+
+			// Y軸方向の動きを追加
+			positions1[index + 1] =
+				originalPositions1[index + 1] +
+				Math.cos(time * 0.8 + positions1[index] * 0.3) * 2.0; // 縦方向の動きを追加
 		}
-		geometry.attributes.position.needsUpdate = true;
+		geometry1.attributes.position.needsUpdate = true;
+
+		// 第2の波の更新（縦方向の波）
+		const positions2 = geometry2.attributes.position.array;
+		for (let i = 0; i < numParticlesPerGroup; i++) {
+			const index = i * 3;
+			positions2[index + 1] =
+				originalPositions2[index + 1] +
+				Math.sin(time * 1.2 + positions2[index] * 0.5) * 6.0; // 振幅を3.0から6.0に増加
+		}
+		geometry2.attributes.position.needsUpdate = true;
+
+		// 第3の波の更新（斜め方向の波）
+		const positions3 = geometry3.attributes.position.array;
+		for (let i = 0; i < numParticlesPerGroup; i++) {
+			const index = i * 3;
+			// 斜め方向の動きを作成（X軸とY軸の組み合わせ）
+			positions3[index] =
+				originalPositions3[index] +
+				Math.cos(time * 1.5 + positions3[index + 1] * 0.4) * 1.5;
+			positions3[index + 1] =
+				originalPositions3[index + 1] +
+				Math.sin(time * 1.5 + positions3[index] * 0.4) * 1.5;
+		}
+		geometry3.attributes.position.needsUpdate = true;
 	} else {
-		// 球体がY軸周りに回転する
-		points.rotation.y += 0.01; // Y軸周りに回転
+		points1.rotation.y += 0.01;
+		points2.rotation.y += 0.01;
+		points3.rotation.y += 0.01;
 	}
 
 	// composerを使用してレンダリング
