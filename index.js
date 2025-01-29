@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GUI } from 'three/examples/jsm/libs/dat.gui.module.js';
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -88,17 +89,33 @@ composer.addPass(renderPass);
 
 // BokehPassの設定を調整
 const bokehPass = new BokehPass(scene, camera, {
-	focus: 3.5, // カメラから球体までの距離に近い値（5 - 1.5 = 3.5付近）
-	aperture: 0.005, // 絞りを小さくしてボケを抑える
-	maxblur: 0.01, // 最大ボケ量
+	focus: 5.0,
+	aperture: 0.003,
+	maxblur: 0.005,
 	width: window.innerWidth,
 	height: window.innerHeight,
 });
 composer.addPass(bokehPass);
 
+// デバッグ用：カメラから球体までの距離を計算して表示
+const spherePosition = new THREE.Vector3(0, 0, 0); // 球体の中心位置
+const distance = camera.position.distanceTo(spherePosition);
+console.log('Camera to sphere distance:', distance);
+
+// GUI（デバッグ用コントロール）を追加
+const gui = new GUI();
+gui.add(bokehPass.uniforms.focus, 'value', 0, 10, 0.1).name('Focus');
+gui.add(bokehPass.uniforms.aperture, 'value', 0, 0.01, 0.0001).name('Aperture');
+gui.add(bokehPass.uniforms.maxblur, 'value', 0, 0.01, 0.0001).name('Max Blur');
+
 // アニメーションループ
 function animate() {
 	requestAnimationFrame(animate);
+
+	// 球体までの距離を動的に計算
+	const spherePosition = new THREE.Vector3(0, 0, 0);
+	const distance = camera.position.distanceTo(spherePosition);
+	bokehPass.uniforms.focus.value = distance;
 
 	// 波の動き (isHolding じゃないときだけ)
 	if (!isHolding) {
