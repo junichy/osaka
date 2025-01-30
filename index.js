@@ -4,8 +4,9 @@ import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 // シーン、カメラ、レンダラーのセットアップ
-// シーン、カメラ、レンダラーのセットアップ
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xffffff); // 背景を白に設定
+
 const camera = new THREE.PerspectiveCamera(
 	75,
 	window.innerWidth / window.innerHeight,
@@ -13,10 +14,11 @@ const camera = new THREE.PerspectiveCamera(
 	1000
 );
 const renderer = new THREE.WebGLRenderer();
+renderer.setClearColor(0xffffff); // レンダラーの背景も白に設定
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 // パーティクルの数を3つのグループに分ける
-const numParticlesPerGroup = 5000; // 合計15000個を3グループに
+const numParticlesPerGroup = 15000; // 各グループのパーティクル数（合計15000個）
 
 // 第1の波用のジオメトリ
 const geometry1 = new THREE.BufferGeometry();
@@ -36,11 +38,11 @@ const positions3 = new Float32Array(numParticlesPerGroup * 3);
 const originalPositions3 = new Float32Array(numParticlesPerGroup * 3);
 const targetPositions3 = new Float32Array(numParticlesPerGroup * 3);
 
-// 初期位置の設定に第3の波を追加
+// 初期位置の設定
 for (let i = 0; i < numParticlesPerGroup; i++) {
 	// 第1の波の初期位置（水色の波 - 0x88ccff - 横方向の動き）
 	const x1 = (Math.random() - 0.5) * 50;
-	const y1 = (Math.random() - 0.5) * 0.5;
+	const y1 = (Math.random() - 0.5) * 0.2; // 高さ範囲をさらに制限
 	const z1 = (Math.random() - 0.5) * 30;
 	positions1[i * 3] = x1;
 	positions1[i * 3 + 1] = y1;
@@ -51,7 +53,7 @@ for (let i = 0; i < numParticlesPerGroup; i++) {
 
 	// 第2の波の初期位置（ピンクの波 - 0xff88cc - 縦方向の動き）
 	const x2 = (Math.random() - 0.5) * 50;
-	const y2 = (Math.random() - 0.5) * 1.0; // 0.4から1.0に増加
+	const y2 = (Math.random() - 0.5) * 0.2; // 高さ範囲をさらに制限
 	const z2 = (Math.random() - 0.5) * 40;
 	positions2[i * 3] = x2;
 	positions2[i * 3 + 1] = y2;
@@ -62,7 +64,7 @@ for (let i = 0; i < numParticlesPerGroup; i++) {
 
 	// 第3の波の初期位置（オレンジの波 - 0xff8844 - 斜め方向の動き）
 	const x3 = (Math.random() - 0.5) * 50;
-	const y3 = (Math.random() - 0.5) * 0.4;
+	const y3 = (Math.random() - 0.5) * 0.2; // 高さ範囲をさらに制限
 	const z3 = (Math.random() - 0.5) * 40;
 	positions3[i * 3] = x3;
 	positions3[i * 3 + 1] = y3;
@@ -94,10 +96,30 @@ geometry1.setAttribute('position', new THREE.BufferAttribute(positions1, 3));
 geometry2.setAttribute('position', new THREE.BufferAttribute(positions2, 3));
 geometry3.setAttribute('position', new THREE.BufferAttribute(positions3, 3));
 
-// 2つの異なる色のマテリアル
-const material1 = new THREE.PointsMaterial({ color: 0x88ccff, size: 0.02 });
-const material2 = new THREE.PointsMaterial({ color: 0xff88cc, size: 0.02 });
-const material3 = new THREE.PointsMaterial({ color: 0xff8844, size: 0.02 });
+// マテリアルの設定をシンプルに戻す
+const material1 = new THREE.PointsMaterial({
+	color: 0x88ccff, // 水色
+	size: 0.02, // パーティクルのサイズ
+	transparent: true,
+	opacity: 1.0,
+	depthWrite: false,
+});
+
+const material2 = new THREE.PointsMaterial({
+	color: 0xff88cc, // ピンク
+	size: 0.02, // パーティクルのサイズ
+	transparent: true,
+	opacity: 1.0,
+	depthWrite: false,
+});
+
+const material3 = new THREE.PointsMaterial({
+	color: 0xff8844, // オレンジ
+	size: 0.02, // パーティクルのサイズ
+	transparent: true,
+	opacity: 1.0,
+	depthWrite: false,
+});
 
 const points1 = new THREE.Points(geometry1, material1);
 const points2 = new THREE.Points(geometry2, material2);
@@ -193,45 +215,42 @@ function animate() {
 	requestAnimationFrame(animate);
 
 	if (!isHolding) {
-		const time = performance.now() * 0.002;
+		const time = performance.now() * 0.001;
 
-		// 第1の波の更新（横方向の波）
+		// 第1の波の更新（水色 - 横方向の波）
 		const positions1 = geometry1.attributes.position.array;
 		for (let i = 0; i < numParticlesPerGroup; i++) {
 			const index = i * 3;
-			// X軸方向の動き
 			positions1[index] =
 				originalPositions1[index] +
-				Math.sin(time * 1.0 + positions1[index + 2] * 0.4) * 4.0;
+				Math.sin(time * 0.5 + positions1[index + 2] * 0.1) * 5.0; // ここで周期を設定
 
-			// Y軸方向の動きを追加
 			positions1[index + 1] =
 				originalPositions1[index + 1] +
-				Math.cos(time * 0.8 + positions1[index] * 0.3) * 2.0; // 縦方向の動きを追加
+				Math.cos(time * 0.4 + positions1[index] * 0.1) * 5.0; // ここで周期を設定
 		}
 		geometry1.attributes.position.needsUpdate = true;
 
-		// 第2の波の更新（縦方向の波）
+		// 第2の波の更新（ピンク - 縦方向の波）
 		const positions2 = geometry2.attributes.position.array;
 		for (let i = 0; i < numParticlesPerGroup; i++) {
 			const index = i * 3;
 			positions2[index + 1] =
 				originalPositions2[index + 1] +
-				Math.sin(time * 1.2 + positions2[index] * 0.5) * 6.0; // 振幅を3.0から6.0に増加
+				Math.sin(time * 0.6 + positions2[index] * 0.5) * 1.0; // ここで周期を設定
 		}
 		geometry2.attributes.position.needsUpdate = true;
 
-		// 第3の波の更新（斜め方向の波）
+		// 第3の波の更新（オレンジ - 斜め方向の波）
 		const positions3 = geometry3.attributes.position.array;
 		for (let i = 0; i < numParticlesPerGroup; i++) {
 			const index = i * 3;
-			// 斜め方向の動きを作成（X軸とY軸の組み合わせ）
 			positions3[index] =
 				originalPositions3[index] +
-				Math.cos(time * 1.5 + positions3[index + 1] * 0.4) * 1.5;
+				Math.cos(time * 0.7 + positions3[index + 1] * 0.4) * 0.8; // ここで周期を設定
 			positions3[index + 1] =
 				originalPositions3[index + 1] +
-				Math.sin(time * 1.5 + positions3[index] * 0.4) * 1.5;
+				Math.sin(time * 0.7 + positions3[index] * 0.4) * 0.8; // ここで周期を設定
 		}
 		geometry3.attributes.position.needsUpdate = true;
 	} else {
